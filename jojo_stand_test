@@ -1,0 +1,309 @@
+-- JoJo Stand Script for Da Hood
+-- Place this script in StarterPlayerScripts or a LocalScript in a tool
+
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local stand = nil
+local commands = {}
+local mainAccount = "ieatcorey2" -- Replace with your main account username
+local altAccountName = "skibidisigmaalpha147" -- Replace with your alt account username
+local stompProtectionEnabled = true -- Enables antistomp functionality
+
+-- Function to summon the stand (alt account or model)
+local function summonStand()
+    if stand then
+        stand:Destroy()
+        stand = nil
+    else
+        stand = Instance.new("Model", workspace)
+        stand.Name = player.Name .. "'s Stand"
+
+        local standPart = Instance.new("Part", stand)
+        standPart.Size = Vector3.new(2, 3, 2)
+        standPart.BrickColor = BrickColor.new("Bright violet")
+        standPart.Material = Enum.Material.Neon
+        standPart.Anchored = false
+        stand.PrimaryPart = standPart
+
+        local weld = Instance.new("Weld", standPart)
+        weld.Part0 = standPart
+        weld.Part1 = character:FindFirstChild("HumanoidRootPart")
+        weld.C0 = CFrame.new(3, 0, -2)
+
+        -- Make the stand float behind the player
+        game:GetService("RunService").Stepped:Connect(function()
+            if stand and character:FindFirstChild("HumanoidRootPart") then
+                stand.PrimaryPart.Position = character.HumanoidRootPart.Position + Vector3.new(3, 5, -2)
+            end
+        end)
+
+        -- Add stomp protection
+        if stompProtectionEnabled then
+            stand.ChildRemoved:Connect(function()
+                summonStand() -- Automatically re-summon the stand
+            end)
+
+            stand.AncestryChanged:Connect(function(_, parent)
+                if not parent then
+                    summonStand() -- Re-summon if the stand is deleted
+                end
+            end)
+        end
+    end
+end
+
+-- Function for stand hovering, teleporting, and punching
+local function heavyPunch(targetHRP)
+    if stand and targetHRP then
+        -- Hover in air
+        stand.PrimaryPart.Position = targetHRP.Position + Vector3.new(0, 5, 0)
+        wait(0.5)
+
+        -- Teleport to target and punch
+        stand.PrimaryPart.Position = targetHRP.Position + Vector3.new(0, 0, -2)
+        wait(0.2)
+
+        -- Directly deal damage if possible
+        local targetHumanoid = targetHRP.Parent:FindFirstChild("Humanoid")
+        if targetHumanoid then
+            targetHumanoid:TakeDamage(25) -- Adjust damage as needed
+        end
+    end
+end
+
+-- Function for shooting target with LMG
+local function gbringTarget(targetName)
+    if stand then
+        for _, target in pairs(game.Players:GetPlayers()) do
+            if target.Name:lower() == targetName:lower() and target.Character then
+                local targetHRP = target.Character:FindFirstChild("HumanoidRootPart")
+                if targetHRP then
+                    local orbitSpeed = 30
+                    local angle = 0
+
+                    game:GetService("RunService").Heartbeat:Connect(function()
+                        if stand and targetHRP then
+                            angle = angle + math.rad(orbitSpeed)
+                            local offset = Vector3.new(math.cos(angle) * 5, 5, math.sin(angle) * 5)
+                            stand.PrimaryPart.Position = targetHRP.Position + offset
+                        end
+                    end)
+
+                    for _ = 1, 5 do -- Shoot multiple times
+                        local bullet = Instance.new("Part", workspace)
+                        bullet.Size = Vector3.new(0.2, 0.2, 0.2)
+                        bullet.BrickColor = BrickColor.new("Bright yellow")
+                        bullet.Material = Enum.Material.Neon
+                        bullet.CFrame = stand.PrimaryPart.CFrame
+                        bullet.Velocity = (targetHRP.Position - bullet.Position).unit * 100
+
+                        bullet.Touched:Connect(function(hit)
+                            if hit.Parent:FindFirstChild("Humanoid") then
+                                hit.Parent.Humanoid:TakeDamage(10)
+                                bullet:Destroy()
+                            end
+                        end)
+
+                        game.Debris:AddItem(bullet, 2)
+                        wait(0.1)
+                    end
+                end
+                break
+            end
+        end
+    end
+end
+
+-- Function for shooting and stomping target
+local function gstompTarget(targetName)
+    if stand then
+        for _, target in pairs(game.Players:GetPlayers()) do
+            if target.Name:lower() == targetName:lower() and target.Character then
+                local targetHRP = target.Character:FindFirstChild("HumanoidRootPart")
+                if targetHRP then
+                    local orbitSpeed = 30
+                    local angle = 0
+
+                    game:GetService("RunService").Heartbeat:Connect(function()
+                        if stand and targetHRP then
+                            angle = angle + math.rad(orbitSpeed)
+                            local offset = Vector3.new(math.cos(angle) * 5, 5, math.sin(angle) * 5)
+                            stand.PrimaryPart.Position = targetHRP.Position + offset
+                        end
+                    end)
+
+                    for _ = 1, 5 do -- Shoot multiple times
+                        local bullet = Instance.new("Part", workspace)
+                        bullet.Size = Vector3.new(0.2, 0.2, 0.2)
+                        bullet.BrickColor = BrickColor.new("Bright yellow")
+                        bullet.Material = Enum.Material.Neon
+                        bullet.CFrame = stand.PrimaryPart.CFrame
+                        bullet.Velocity = (targetHRP.Position - bullet.Position).unit * 100
+
+                        bullet.Touched:Connect(function(hit)
+                            if hit.Parent:FindFirstChild("Humanoid") then
+                                hit.Parent.Humanoid:TakeDamage(10)
+                                bullet:Destroy()
+                            end
+                        end)
+
+                        game.Debris:AddItem(bullet, 2)
+                        wait(0.1)
+                    end
+
+                    local targetHumanoid = targetHRP.Parent:FindFirstChild("Humanoid")
+                    if targetHumanoid then
+                        targetHumanoid:TakeDamage(50) -- Stomp damage
+                    end
+                end
+                break
+            end
+        end
+    end
+end
+
+-- Function to attack a target
+local function attackPlayer(targetName)
+    if stand then
+        for _, target in pairs(game.Players:GetPlayers()) do
+            if target.Name:lower() == targetName:lower() and target.Character then
+                local targetHRP = target.Character:FindFirstChild("HumanoidRootPart")
+                if targetHRP then
+                    heavyPunch(targetHRP)
+                end
+                break
+            end
+        end
+    end
+end
+
+-- Function to bring target to player
+local function bringTarget(targetName)
+    for _, target in pairs(game.Players:GetPlayers()) do
+        if target.Name:lower() == targetName:lower() and target.Character then
+            local targetHRP = target.Character:FindFirstChild("HumanoidRootPart")
+            if targetHRP and character:FindFirstChild("HumanoidRootPart") then
+                heavyPunch(targetHRP)
+                wait(0.5)
+                targetHRP.CFrame = character.HumanoidRootPart.CFrame * CFrame.new(0, 0, 5)
+            end
+            break
+        end
+    end
+end
+
+-- Function to teleport to specific coordinates (e.g., Bank roof in Da Hood)
+local function teleportToBankRoof()
+    if character and character:FindFirstChild("HumanoidRootPart") then
+        character.HumanoidRootPart.CFrame = CFrame.new(Vector3.new(-303, 50, -258)) -- Adjust coordinates as needed
+    end
+end
+
+-- Function to auto-kill a target
+local function autoKill(targetName)
+    for _, target in pairs(game.Players:GetPlayers()) do
+        if target.Name:lower() == targetName:lower() and target.Character then
+            local targetHRP = target.Character:FindFirstChild("HumanoidRootPart")
+            if targetHRP then
+                for _ = 1, 3 do -- Punch multiple times for effect
+                    heavyPunch(targetHRP)
+                    wait(0.5)
+                end
+            end
+            break
+        end
+    end
+end
+
+-- Function to make the stand follow a target
+local function frameTarget(targetName)
+    if stand then
+        for _, target in pairs(game.Players:GetPlayers()) do
+            if target.Name:lower() == targetName:lower() and target.Character then
+                local targetHRP = target.Character:FindFirstChild("HumanoidRootPart")
+                if targetHRP then
+                    -- Continuously follow the target
+                    game:GetService("RunService").Stepped:Connect(function()
+                        if stand and targetHRP then
+                            stand.PrimaryPart.Position = targetHRP.Position + Vector3.new(0, 3, -2)
+                        end
+                    end)
+                end
+                break
+            end
+        end
+    end
+end
+
+-- Function to collect nearby money
+local function collectAura()
+    if stand then
+        game:GetService("RunService").Heartbeat:Connect(function()
+            for _, money in pairs(workspace:GetChildren()) do
+                if money:IsA("Part") and money.Name == "Money" and (money.Position - stand.PrimaryPart.Position).Magnitude <= 10 then
+                    money.CFrame = stand.PrimaryPart.CFrame
+                end
+            end
+        end)
+    end
+end
+
+-- Function to heal the player
+local function healPlayer()
+    if stand then
+        local foodVendorPosition = Vector3.new(-250, 10, -200) -- Replace with actual vendor position
+        local foodName = "Burger" -- Replace with actual food item name
+
+        -- Teleport to vendor and buy food
+        stand.PrimaryPart.Position = foodVendorPosition
+        wait(0.5)
+
+        -- Directly interact with vendor (requires integration with game's shop system)
+        print("Buying food...")
+        wait(1)
+
+        -- Teleport back to player and eat food
+        stand.PrimaryPart.Position = character.HumanoidRootPart.Position
+        wait(0.5)
+
+        print("Eating food...")
+        wait(2)
+    end
+end
+
+-- Commands setup
+commands[".summon"] = summonStand
+commands[".attack"] = attackPlayer
+commands[".bring"] = bringTarget
+commands[".teleport"] = teleportToBankRoof
+commands[".autokill"] = autoKill
+commands[".gbring"] = gbringTarget
+commands[".gstomp"] = gstompTarget
+commands[".frame"] = frameTarget
+commands[".caura"] = collectAura
+commands[".heal"] = healPlayer
+
+-- RemoteEvent listener
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local standActions = Instance.new("RemoteEvent")
+standActions.Name = "StandActions"
+standActions.Parent = ReplicatedStorage
+
+standActions.OnServerEvent:Connect(function(player, command, targetName)
+    if player.Name == mainAccount then
+        if commands[command] then
+            commands[command](targetName)
+        end
+    end
+end)
+
+-- Chat command handler
+player.Chatted:Connect(function(msg)
+    local args = msg:split(" ")
+    local command = "." .. args[1]:lower()
+    local targetName = args[2]
+
+    if commands[command] then
+        commands[command](targetName)
+    end
+end)
