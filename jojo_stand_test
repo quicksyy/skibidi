@@ -5,8 +5,8 @@ local player = game.Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
 local stand = nil
 local commands = {}
-local mainAccount = "ieatcorey2" -- Replace with your main account username
-local altAccountName = "skibidisigmaalpha147" -- Replace with your alt account username
+local mainAccount = "Quicksylvauk" -- Replace with your main account username
+local altAccountName = "dhskibidisigma" -- Replace with your alt account username
 local stompProtectionEnabled = true -- Enables antistomp functionality
 
 -- Function to summon the stand (alt account or model)
